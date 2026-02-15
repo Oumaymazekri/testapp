@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NextGen Auth</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="form-toggle">
+            <button id="login-toggle" class="active">Login</button>
+            <button id="register-toggle">Sign Up</button>
+            <div class="slider"></div>
+        </div>
+
+        <div class="forms-wrapper">
+            <!-- Login Form -->
+            <form id="login-form">
+                <div class="input-group">
+                    <input type="text" id="login-username" required placeholder=" " autocomplete="off">
+                    <label for="login-username">Username</label>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="login-password" required placeholder=" " autocomplete="off">
+                    <label for="login-password">Password</label>
+                </div>
+                <button type="submit">Log In</button>
+                <div class="message" id="login-message"></div>
+            </form>
+
+            <!-- Register Form -->
+            <form id="register-form">
+                <div class="input-group">
+                    <input type="text" id="register-username" required placeholder=" " autocomplete="off">
+                    <label for="register-username">Choose Username</label>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="register-password" required placeholder=" " autocomplete="off">
+                    <label for="register-password">Create Password</label>
+                </div>
+                <button type="submit">Sign Up</button>
+                <div class="message" id="register-message"></div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
