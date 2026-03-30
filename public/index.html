@@ -10,40 +10,77 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <div class="form-toggle">
-            <button id="login-toggle" class="active">Login</button>
-            <button id="register-toggle">Sign Up</button>
-            <div class="slider"></div>
+    <main class="app-layout">
+        <div class="container auth-container">
+            <div class="form-toggle">
+                <button id="login-toggle" class="active">Login</button>
+                <button id="register-toggle">Sign Up</button>
+                <div class="slider"></div>
+            </div>
+
+            <div class="forms-wrapper">
+                <!-- Login Form -->
+                <form id="login-form">
+                    <div class="input-group">
+                        <input type="text" id="login-username" required placeholder=" " autocomplete="off">
+                        <label for="login-username">Username</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="password" id="login-password" required placeholder=" " autocomplete="off">
+                        <label for="login-password">Password</label>
+                    </div>
+                    <button type="submit">Log In</button>
+                    <div class="message" id="login-message"></div>
+                </form>
+
+                <!-- Register Form -->
+                <form id="register-form">
+                    <div class="input-group">
+                        <input type="text" id="register-username" required placeholder=" " autocomplete="off">
+                        <label for="register-username">Choose Username</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="password" id="register-password" required placeholder=" " autocomplete="off">
+                        <label for="register-password">Create Password</label>
+                    </div>
+                    <button type="submit">Sign Up</button>
+                    <div class="message" id="register-message"></div>
+                </form>
+            </div>
         </div>
 
-        <div class="forms-wrapper">
-            <!-- Login Form -->
-            <form id="login-form">
-                <div class="input-group">
-                    <input type="text" id="login-username" required placeholder=" " autocomplete="off">
-                    <label for="login-username">Username</label>
+        <div id="users-panel" class="users-panel hidden">
+            <div class="panel-header">
+                <div>
+                    <h2>Liste des Utilisateurs</h2>
+                    <p class="subtitle">Gestion des comptes MongoDB</p>
                 </div>
-                <div class="input-group">
-                    <input type="password" id="login-password" required placeholder=" " autocomplete="off">
-                    <label for="login-password">Password</label>
-                </div>
-                <button type="submit">Log In</button>
-                <div class="message" id="login-message"></div>
-            </form>
+                <button id="refresh-users" class="icon-btn tooltip"><i class="fas fa-sync-alt"></i><span class="tooltiptext">Rafraîchir</span></button>
+            </div>
+            <div id="users-list" class="users-list">
+                <!-- Les utilisateurs seront affichés ici -->
+            </div>
+        </div>
+    </main>
 
-            <!-- Register Form -->
-            <form id="register-form">
+    <!-- Modal pour Modification -->
+    <div id="edit-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Modifier l'Utilisateur</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <form id="edit-form">
+                <input type="hidden" id="edit-user-id">
                 <div class="input-group">
-                    <input type="text" id="register-username" required placeholder=" " autocomplete="off">
-                    <label for="register-username">Choose Username</label>
+                    <input type="text" id="edit-username" required placeholder=" " autocomplete="off">
+                    <label for="edit-username">Nouveau nom d'utilisateur</label>
                 </div>
                 <div class="input-group">
-                    <input type="password" id="register-password" required placeholder=" " autocomplete="off">
-                    <label for="register-password">Create Password</label>
+                    <input type="password" id="edit-password" placeholder=" " autocomplete="off">
+                    <label for="edit-password">Nouveau mot de passe (optionnel)</label>
                 </div>
-                <button type="submit">Sign Up</button>
-                <div class="message" id="register-message"></div>
+                <button type="submit" class="save-btn">Enregistrer les modifications</button>
             </form>
         </div>
     </div>

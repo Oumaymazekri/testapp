@@ -1,9 +1,10 @@
-require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
+const bcrypt = require('bcryptjs'); // Hachage des mots de passe
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,13 +16,17 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('MongoDB connected successfully'))
-    .catch(err => console.error('MongoDB connection error:', err));
+    .then(() => console.log('✅ MongoDB connected successfully at ' + process.env.MONGODB_URI))
+    .catch(err => {
+        console.error('❌ MongoDB connection error:', err);
+        console.error('Assurez-vous que MongoDB est bien lancé localement ou que votre MONGODB_URI dans .env est correct.');
+    });
 
 // User Model
 const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
-    password: { type: String, required: true }
+    password: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
 });
 
 const User = mongoose.model('User', userSchema);
@@ -33,24 +38,31 @@ app.post('/api/register', async (req, res) => {
     try {
         const { username, password } = req.body;
 
-        // Simple validation
+        // Validation simple
         if (!username || !password) {
-            return res.status(400).json({ message: 'Please provide both username and password' });
+            return res.status(400).json({ message: 'Veuillez fournir un nom d\'utilisateur et un mot de passe' });
         }
 
-        // Check if user exists
+        // Vérifier si l'utilisateur existe déjà
         const existingUser = await User.findOne({ username });
         if (existingUser) {
-            return res.status(400).json({ message: 'Username already taken' });
+            return res.status(400).json({ message: 'Ce nom d\'utilisateur est déjà pris' });
         }
 
-        const newUser = new User({ username, password });
+        // Hachage du mot de passe avant stockage
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const newUser = new User({ 
+            username, 
+            password: hashedPassword 
+        });
+        
         await newUser.save();
 
-        res.status(201).json({ message: 'User registered successfully' });
+        res.status(201).json({ message: 'Utilisateur enregistré avec succès !' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error during registration' });
+        res.status(500).json({ message: 'Erreur serveur lors de l\'inscription' });
     }
 });
 
@@ -59,24 +71,99 @@ app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
 
+        if (!username || !password) {
+            return res.status(400).json({ message: 'Veuillez remplir tous les champs' });
+        }
+
         const user = await User.findOne({ username });
         if (!user) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+            return res.status(400).json({ message: 'Identifiants invalides' });
         }
 
-        // In a real app, compare hashed passwords. For this test, plain text comparison.
-        if (user.password !== password) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+        // Comparer le mot de passe haché
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Identifiants invalides' });
         }
 
-        res.json({ message: 'Login successful', username: user.username });
+        res.json({ 
+            message: 'Connexion réussie !', 
+            username: user.username 
+        });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error during login' });
+        res.status(500).json({ message: 'Erreur serveur lors de la connexion' });
+    }
+});
+
+// GET all users
+app.get('/api/users', async (req, res) => {
+    try {
+        const users = await User.find({}, '-password'); // On ne renvoie pas les mots de passe
+        res.json(users);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des utilisateurs' });
+    }
+});
+
+// DELETE user
+app.delete('/api/users/:id', async (req, res) => {
+    try {
+        const result = await User.findByIdAndDelete(req.params.id);
+        if (!result) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé' });
+        }
+        res.json({ message: 'Utilisateur supprimé avec succès' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Erreur lors de la suppression' });
+    }
+});
+
+// UPDATE user (PUT)
+app.get('/api/users/:id', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id, '-password');
+        if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé' });
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur serveur' });
+    }
+});
+
+app.put('/api/users/:id', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        const updates = {};
+        
+        if (username) {
+            // Vérifier si le nouveau username est déjà pris par un AUTRE utilisateur
+            const existingUser = await User.findOne({ username, _id: { $ne: req.params.id } });
+            if (existingUser) {
+                return res.status(400).json({ message: 'Ce nom d\'utilisateur est déjà pris' });
+            }
+            updates.username = username;
+        }
+
+        if (password) {
+            updates.password = await bcrypt.hash(password, 10);
+        }
+
+        const user = await User.findByIdAndUpdate(req.params.id, updates, { new: true });
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé' });
+        }
+
+        res.json({ message: 'Utilisateur mis à jour avec succès', user: { username: user.username } });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Erreur lors de la mise à jour' });
     }
 });
 
 // Start Server
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
+
