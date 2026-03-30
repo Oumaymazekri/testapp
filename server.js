@@ -14,12 +14,22 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Health check pour AutoDevops
+app.get('/health', (req, res) => {
+    res.status(200).json({ 
+        status: 'UP', 
+        timestamp: new Date(),
+        db: mongoose.connection.readyState === 1 ? 'CONNECTED' : 'DISCONNECTED'
+    });
+});
+
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('✅ MongoDB connected successfully at ' + process.env.MONGODB_URI))
+mongoose.connect(process.env.MONGODB_URI, {
+    serverSelectionTimeoutMS: 5000 // Évite d'attendre indéfiniment
+})
+    .then(() => console.log('✅ MongoDB connected successfully'))
     .catch(err => {
-        console.error('❌ MongoDB connection error:', err);
-        console.error('Assurez-vous que MongoDB est bien lancé localement ou que votre MONGODB_URI dans .env est correct.');
+        console.error('❌ MongoDB connection error:', err.message);
     });
 
 // User Model
@@ -163,7 +173,8 @@ app.put('/api/users/:id', async (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
+    console.log(`🩺 Health check available at http://0.0.0.0:${PORT}/health`);
 });
 
