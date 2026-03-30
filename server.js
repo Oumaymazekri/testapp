@@ -24,8 +24,11 @@ app.get('/health', (req, res) => {
 });
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
-    serverSelectionTimeoutMS: 5000 // Évite d'attendre indéfiniment
+const MONGO_URI = process.env.MONGODB_URI || 'mongodb://mongodb:27017/admin';
+console.log('🔗 Tentative de connexion MongoDB sur:', MONGO_URI);
+
+mongoose.connect(MONGO_URI, {
+    serverSelectionTimeoutMS: 5000 
 })
     .then(() => console.log('✅ MongoDB connected successfully'))
     .catch(err => {
